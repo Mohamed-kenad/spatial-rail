@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Spatial Rail live demo / Spatial Sites</title>
+<meta name="description" content="Spatial Rail live demo — an interactive menswear demo featuring garments in natural cloth, jewellery, and journal.">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#000000">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Spatial Rail live demo">
+<meta property="og:description" content="Ten pieces in natural cloth on one rail. Scroll along it, turn a piece round, see it worn.">
+<meta property="og:image" content="/demo/poster.webp">
+<meta property="og:url" content="https://spatialsites.co/kits/spatial-rail/demo">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Spatial Rail live demo">
+<meta name="twitter:description" content="Ten pieces in natural cloth on one rail. Scroll along it, turn a piece round, see it worn.">
+<meta name="twitter:image" content="/demo/poster.webp">
+<link rel="canonical" href="https://spatialsites.co/kits/spatial-rail/demo">
+<link rel="icon" href="/demo/favicon.svg" type="image/svg+xml">
+<link rel="preload" as="font" type="font/woff2" href="/wrapper-fonts/jetbrains-mono-latin.woff2" crossorigin>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Spatial Rail",
+  "url": "https://spatialsites.co/kits/spatial-rail/demo",
+  "description": "Spatial Rail live demo — an interactive menswear demo featuring garments in natural cloth, jewellery, and journal."
+}
+</script>
+<style>
+  @font-face {
+    font-family: "JetBrains Mono";
+    font-style: normal;
+    font-weight: 100 800;
+    font-display: swap;
+    src: url("/wrapper-fonts/jetbrains-mono-latin.woff2") format("woff2");
+  }
+  html, body { height: 100%; margin: 0; background: #000; overflow: hidden; }
+  .demo-view { position: fixed; inset: 0; z-index: 90; background: #000; overflow: hidden; }
+  .demo-view-frame { position: relative; z-index: 1; display: block; width: 100%; height: 100%; border: 0; overflow: clip; }
+  .demo-boot {
+    position: absolute; inset: 0; z-index: 2;
+    display: grid; place-items: center;
+    background: #ebe6dd; color: #1d1c1a;
+    transition: opacity .35s ease, visibility .35s ease;
+  }
+  .demo-boot.is-done { opacity: 0; visibility: hidden; }
+  .demo-boot-inner { display: grid; justify-items: center; gap: 18px; }
+  .demo-boot-mark {
+    margin: 0; font: 400 15px/1 "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: .42em; text-indent: .42em; text-transform: uppercase;
+  }
+  .demo-boot-bar { position: relative; width: 120px; height: 1px; overflow: hidden; background: rgba(29, 28, 26, .14); }
+  .demo-boot-bar::after {
+    content: ""; position: absolute; inset: 0; background: #1d1c1a;
+    transform: translateX(-100%); animation: demo-boot-progress 1.15s cubic-bezier(.16, 1, .3, 1) infinite;
+  }
+  @keyframes demo-boot-progress {
+    0% { transform: translateX(-100%); }
+    60%, 100% { transform: translateX(100%); }
+  }
+  .demo-view-back {
+    position: absolute; left: 14px; bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 3;
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 11px 7px 8px;
+    border: 1px solid rgba(255, 255, 255, .16); border-radius: 6px;
+    background: rgba(10, 10, 12, .72); color: #f4f1ea;
+    font: 400 11px/1.5 "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: .88px; text-transform: uppercase; text-decoration: none;
+    box-sizing: border-box;
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    opacity: .35; transition: opacity .18s ease;
+  }
+  .demo-view-back:hover, .demo-view-back:focus-visible { opacity: 1; }
+  .demo-view-back:focus-visible, .demo-dl-btn:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+  .demo-view-back svg { flex: none; }
+  .demo-dl { position: absolute; right: 14px; bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 3; }
+  .demo-dl-btn {
+    position: relative; display: inline-flex; align-items: center; justify-content: center;
+    width: 48px; height: 48px; padding: 0;
+    box-sizing: border-box;
+    border: 1px solid rgba(255, 236, 184, .6); border-radius: 50%;
+    background: #d4ac55; color: #16120a;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .45); cursor: pointer;
+    transition: filter .18s ease, transform .15s ease;
+  }
+  .demo-dl-btn:hover { filter: brightness(1.07); transform: translateY(-1px); }
+  .demo-dl-btn svg { width: 20px; height: 20px; }
+  .demo-dl-word {
+    position: absolute; right: 58px; top: 9px; padding: 6px 10px;
+    border-radius: 4px; background: rgba(10, 10, 12, .86); color: #f4f1ea;
+    font: 600 12px/1.2 Inter, system-ui, sans-serif; letter-spacing: .24px;
+    white-space: nowrap; opacity: 0; transform: translateX(4px);
+    pointer-events: none; transition: opacity .16s ease, transform .16s ease;
+  }
+  .demo-dl:hover .demo-dl-word, .demo-dl-btn:focus-visible + .demo-dl-word { opacity: 1; transform: none; }
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+  }
+  @media (max-width: 640px) {
+    .demo-view-back { border-radius: 50%; justify-content: center; width: 36px; height: 36px; padding: 0; }
+    .demo-view-back span { display: none; }
+    .demo-dl-btn { width: 44px; height: 44px; }
+    /* Keep the 36px / 44px look but give both controls a 48px touch target. */
+    .demo-view-back::before, .demo-dl-btn::before {
+      content: ""; position: absolute; border-radius: 50%;
+    }
+    .demo-view-back::before { inset: -6px; }
+    .demo-dl-btn::before { inset: -2px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .demo-view-back, .demo-dl-btn, .demo-dl-word, .demo-boot { transition: none; }
+    .demo-boot-bar::after { animation: none; transform: none; opacity: .35; }
+  }
+</style>
+</head>
+<body>
+<div class="demo-view">
+  <h1 class="sr-only">Spatial Rail live demo</h1>
+  <iframe src="/demo/index.html" title="Spatial Rail live demo" class="demo-view-frame" allow="fullscreen"></iframe>
+  <div class="demo-boot" id="demo-boot" aria-hidden="true">
+    <div class="demo-boot-inner">
+      <p class="demo-boot-mark">Spatial Rail</p>
+      <span class="demo-boot-bar"></span>
+    </div>
+  </div>
+</div>
+<script>
+  (function () {
+    var boot = document.getElementById("demo-boot");
+    var frame = document.querySelector(".demo-view-frame");
+    if (!boot || !frame) return;
+    var started = performance.now();
+    var hidden = false;
+    function hide() {
+      if (hidden) return;
+      hidden = true;
+      var wait = Math.max(0, 280 - (performance.now() - started));
+      setTimeout(function () {
+        boot.classList.add("is-done");
+        setTimeout(function () { boot.remove(); }, 400);
+      }, wait);
+    }
+    frame.addEventListener("load", hide, { once: true });
+    setTimeout(function () {
+      try {
+        if (frame.contentDocument && frame.contentDocument.location.pathname === "/demo/index.html") hide();
+      } catch (_) {}
+    }, 0);
+    setTimeout(hide, 8000);
+  })();
+</script>
+</body>
+</html>

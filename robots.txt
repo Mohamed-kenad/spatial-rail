@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Offline reference copy of:
+# https://spatialsites.co/kits/spatial-rail/demo
